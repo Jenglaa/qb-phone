@@ -10,6 +10,51 @@ local GeneratedPlates = {}
 local WebHook = ""
 local bannedCharacters = {'%','$',';'}
 
+
+-- new function 
+function AddTransaction(source, sAccount, iAmount, sType, sReceiver, sMessage, cb)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    local CitizenId = Player.PlayerData.citizenid
+
+    local iTransactionID = math.random(1000, 100000)
+
+    MySQL.Async.insert("INSERT INTO `transaction_history` (`citizenid`, `trans_id`, `account`, `amount`, `trans_type`, `receiver`, `message`) VALUES(?, ?, ?, ?, ?, ?, ?)", {
+        CitizenId,
+        iTransactionID,
+        sAccount,
+        iAmount,
+        sType,
+        sReceiver,
+        sMessage
+    })
+end
+
+function GiveReceipt(society)
+    local Lawyers = {}
+    for k, v in pairs(QBCore.Functions.GetPlayers()) do
+        local Player = QBCore.Functions.GetPlayer(v)
+        if Player ~= nil then
+            if (Player.PlayerData.job.name == society) and
+                Player.PlayerData.job.onduty then
+                if(Player.PlayerData.job.name == "burgershot") then
+                    local burgershotcoord = vector3(-1198.45, -895.65, 13.98)
+                    local targetped = GetPlayerPed(v)
+		            local tCoords = GetEntityCoords(targetped)
+		            local dist = #(burgershotcoord - tCoords)
+                    print(dist)
+                    print(tCoords)
+                    print(burgershotcoord)
+                    if dist > 10 then
+                        return
+                    end
+                end
+                Player.Functions.AddItem("coffee", 1)
+            end
+        end
+    end
+end
+
 -- Functions
 
 local function GetOnlineStatus(number)
@@ -265,7 +310,7 @@ QBCore.Functions.CreateCallback('qb-phone:server:PayInvoice', function(source, c
     local invoiceMailData = {}
     if SenderPly and Config.BillingCommissions[society] then
         local commission = round(amount * Config.BillingCommissions[society])
-        SenderPly.Functions.AddMoney('bank', commission)
+        -- SenderPly.Functions.AddMoney('bank', commission)
         invoiceMailData = {
             sender = 'Billing Department',
             subject = 'Commission Received',
@@ -280,7 +325,10 @@ QBCore.Functions.CreateCallback('qb-phone:server:PayInvoice', function(source, c
     end
     Ply.Functions.RemoveMoney('bank', amount, "paid-invoice")
     TriggerEvent('qb-phone:server:sendNewMailToOffline', sendercitizenid, invoiceMailData)
-    TriggerEvent("qb-bossmenu:server:addAccountMoney", society, amount)
+    -- TriggerEvent("qb-bossmenu:server:addAccountMoney", society, amount)
+    TriggerEvent('qb-banking:society:server:DepositMoney', source, math.floor(amount) , society)
+    AddTransaction(source, "business", amount, "Invoice", "Payment", (note ~= "" and note or "Deposited $"..string.format(amount).." cash into ".. society .."'s business account."))
+    GiveReceipt(society)
     MySQL.Async.execute('DELETE FROM phone_invoices WHERE id = ?', {invoiceId})
     local invoices = MySQL.Sync.fetchAll('SELECT * FROM phone_invoices WHERE citizenid = ?', {Ply.PlayerData.citizenid})
     if invoices[1] ~= nil then
@@ -1090,3 +1138,5 @@ QBCore.Commands.Add('bill', 'Bill A Player', {{name = 'id', help = 'Player ID'},
         TriggerClientEvent('QBCore:Notify', source, 'No Access', 'error')
     end
 end)
+
+
