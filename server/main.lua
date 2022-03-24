@@ -30,26 +30,21 @@ function AddTransaction(source, sAccount, iAmount, sType, sReceiver, sMessage, c
     })
 end
 
-function GiveReceipt(society)
+function GiveReceipt(user)
     local Lawyers = {}
     for k, v in pairs(QBCore.Functions.GetPlayers()) do
         local Player = QBCore.Functions.GetPlayer(v)
         if Player ~= nil then
-            if (Player.PlayerData.job.name == society) and
+            if (Player.PlayerData.job.name == "burgershot") and
                 Player.PlayerData.job.onduty then
-                if(Player.PlayerData.job.name == "burgershot") then
-                    local burgershotcoord = vector3(-1198.45, -895.65, 13.98)
-                    local targetped = GetPlayerPed(v)
-		            local tCoords = GetEntityCoords(targetped)
-		            local dist = #(burgershotcoord - tCoords)
-                    print(dist)
-                    print(tCoords)
-                    print(burgershotcoord)
-                    if dist > 10 then
-                        return
-                    end
+                local burgershotcoord = vector3(-1198.45, -895.65, 13.98)
+                local targetped = GetPlayerPed(v)
+		        local tCoords = GetEntityCoords(targetped)
+		        local dist = #(burgershotcoord - tCoords)
+                if dist > 40 then
+                    return
                 end
-                Player.Functions.AddItem("coffee", 1)
+                Player.Functions.AddItem("resit-burgershot", 1)
             end
         end
     end
@@ -327,8 +322,8 @@ QBCore.Functions.CreateCallback('qb-phone:server:PayInvoice', function(source, c
     TriggerEvent('qb-phone:server:sendNewMailToOffline', sendercitizenid, invoiceMailData)
     -- TriggerEvent("qb-bossmenu:server:addAccountMoney", society, amount)
     TriggerEvent('qb-banking:society:server:DepositMoney', source, math.floor(amount) , society)
-    AddTransaction(source, "business", amount, "Invoice", "Payment", (note ~= "" and note or "Deposited $"..string.format(amount).." cash into ".. society .."'s business account."))
-    GiveReceipt(society)
+    AddTransaction(source, "business", amount, "Invoice", "Payment", (note ~= "" and note or "Deposited RM"..string.format(amount).." cash into ".. society .."'s business account."))
+    GiveReceipt(Ply)
     MySQL.Async.execute('DELETE FROM phone_invoices WHERE id = ?', {invoiceId})
     local invoices = MySQL.Sync.fetchAll('SELECT * FROM phone_invoices WHERE citizenid = ?', {Ply.PlayerData.citizenid})
     if invoices[1] ~= nil then

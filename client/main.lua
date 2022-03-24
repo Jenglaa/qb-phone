@@ -1607,13 +1607,13 @@ RegisterNetEvent('qb-phone:client:BillingEmail', function(data, paid, name)
         TriggerServerEvent('qb-phone:server:sendNewMail', {
             sender = 'Billing Department',
             subject = 'Invoice Paid',
-            message = 'Invoice Has Been Paid From '..name..' In The Amount Of $'..data.amount,
+            message = 'Invoice Has Been Paid From '..name..' In The Amount Of RM '..data.amount,
         })
     else
         TriggerServerEvent('qb-phone:server:sendNewMail', {
             sender = 'Billing Department',
             subject = 'Invoice Declined',
-            message = 'Invoice Has Been Declined From '..name..' In The Amount Of $'..data.amount,
+            message = 'Invoice Has Been Declined From '..name..' In The Amount Of RM '..data.amount,
         })
     end
 end)
@@ -1895,7 +1895,7 @@ RegisterNetEvent('qb-phone:client:RemoveBankMoney', function(amount)
             action = "PhoneNotification",
             PhoneNotify = {
                 title = "Bank",
-                text = "$"..amount.." has been removed from your balance!",
+                text = "RM"..amount.." has been removed from your balance!",
                 icon = "fas fa-university",
                 color = "#ff002f",
                 timeout = 3500,
